@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I-69 Filter Generator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 {
+            color: #ff3333;
+            margin-bottom: 5px;
+        }
+        p {
+            color: #888;
+            margin-top: 0;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        input[type="file"], button {
+            background: #222;
+            color: #fff;
+            border: 2px solid #444;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #ff3333;
+            border-color: #ff3333;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            background: #1e1e1e;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>"I-69" Pattern Generator</h1>
+    <p>Upload a square image to stamp the SimplyDogpack theme pattern.</p>
+
+    <div class="controls">
+        <input type="file" id="upload" accept="image/*">
+        <button id="regenerate" disabled>Re-roll Pattern</button>
+        <button id="download" disabled>Download PFP</button>
+    </div>
+
+    <canvas id="canvas" width="800" height="800"></canvas>
+
+    <script>
+        const upload = document.getElementById('upload');
+        const regenerateBtn = document.getElementById('regenerate');
+        const downloadBtn = document.getElementById('download');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let uploadedImage = null;
+
+        // Configuration for the stamp filter
+        const TEXT_STRING = "I-69";
+        const STAMP_COUNT = 35; // Total amount of repeating stamps
+        const COLORS = ['#ff1a1a', '#0066ff']; // Album theme Red and Blue
+
+        // Handle Image Upload
+        upload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    uploadedImage = img;
+                    generateFilter();
+                    regenerateBtn.disabled = false;
+                    downloadBtn.disabled = false;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Generate the random overlay pattern
+        function generateFilter() {
+            if (!uploadedImage) return;
+
+            // 1. Draw original background image cropped to square bounds
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Cover/center the image perfectly in our 800x800 square box
+            const size = Math.min(uploadedImage.width, uploadedImage.height);
+            const sx = (uploadedImage.width - size) / 2;
+            const sy = (uploadedImage.height - size) / 2;
+            ctx.drawImage(uploadedImage, sx, sy, size, size, 0, 0, canvas.width, canvas.height);
+
+            // 2. Loop through and scatter the "I-69" strings
+            for (let i = 0; i < STAMP_COUNT; i++) {
+                // Randomize sizing weights to make some tiny and some massive
+                const isMassive = Math.random() > 0.85;
+                const fontSize = isMassive ? Math.floor(Math.random() * 40) + 40 : Math.floor(Math.random() * 18) + 14;
+                
+                // Pick color alternating from the list
+                const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+                ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+                ctx.fillStyle = color;
+                ctx.textBaseline = 'top';
+
+                // Random coordinates spanning the canvas viewport
+                const x = Math.random() * (canvas.width - 60);
+                const y = Math.random() * (canvas.height - 30);
+
+                // Draw text string
+                ctx.fillText(TEXT_STRING, x, y);
+            }
+        }
+
+        // Re-roll button logic
+        regenerateBtn.addEventListener('click', generateFilter);
+
+        // Download Action
+        downloadBtn.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'i69_pfp.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    </script>
+</body>
+</html>
