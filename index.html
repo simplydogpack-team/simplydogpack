@@ -44,6 +44,15 @@
             background: #ff3333;
             border-color: #ff3333;
         }
+        /* Custom X Button Styling matching your layout style */
+        #shareX {
+            background: #000000;
+            border-color: #333333;
+        }
+        #shareX:hover {
+            background: #141414;
+            border-color: #ff3333;
+        }
         canvas {
             max-width: 100%;
             height: auto;
@@ -62,6 +71,7 @@
         <input type="file" id="upload" accept="image/*">
         <button id="regenerate" disabled>Re-roll Pattern</button>
         <button id="download" disabled>Download PFP</button>
+        <button id="shareX" disabled>Share to X</button>
     </div>
 
     <canvas id="canvas" width="800" height="800"></canvas>
@@ -70,6 +80,7 @@
         const upload = document.getElementById('upload');
         const regenerateBtn = document.getElementById('regenerate');
         const downloadBtn = document.getElementById('download');
+        const shareXBtn = document.getElementById('shareX');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
@@ -93,6 +104,7 @@
                     generateFilter();
                     regenerateBtn.disabled = false;
                     downloadBtn.disabled = false;
+                    shareXBtn.disabled = false; // Enable share button
                 };
                 img.src = event.target.result;
             };
@@ -132,6 +144,24 @@
                 // Draw text string
                 ctx.fillText(TEXT_STRING, x, y);
             }
+
+            // 3. Draw permanent "#I69" branding watermark in the bottom right corner
+            ctx.font = "bold 32px Arial, sans-serif";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "bottom";
+            
+            // Black outline stroke to keep it visible on bright backgrounds
+            ctx.strokeStyle = "#000000";
+            ctx.lineWidth = 5;
+            ctx.strokeText("#I69", canvas.width - 25, canvas.height - 25);
+            
+            // Solid white text layer
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText("#I69", canvas.width - 25, canvas.height - 25);
+
+            // Reset text alignments for consecutive rerolls
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
         }
 
         // Re-roll button logic
@@ -143,6 +173,24 @@
             link.download = 'i69_pfp.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
+        });
+
+        // Share to X Action (Corrected for robust performance inside sandboxed frames)
+        shareXBtn.addEventListener('click', () => {
+            const tweetText = encodeURIComponent("Just updated my profile picture for SimplyDogpack's upcoming 6th album 'I-69'! Drop your pattern here: ");
+            const targetUrl = encodeURIComponent("https://simplydogpack.com");
+            const hashtags = encodeURIComponent("I69Album,SimplyDogpack");
+
+            const xIntentUrl = `https://x.com{tweetText}&url=${targetUrl}&hashtags=${hashtags}`;
+            
+            // Create a temporary hidden link element to bypass strict iframe restrictions
+            const clickLink = document.createElement('a');
+            clickLink.href = xIntentUrl;
+            clickLink.target = '_blank';
+            clickLink.rel = 'noopener noreferrer';
+            document.body.appendChild(clickLink);
+            clickLink.click();
+            document.body.removeChild(clickLink);
         });
     </script>
 </body>
